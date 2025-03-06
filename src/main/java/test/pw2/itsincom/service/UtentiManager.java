@@ -1,4 +1,4 @@
-package test.pw2.itsincom.web;
+package test.pw2.itsincom.service;
 
 import jakarta.enterprise.context.ApplicationScoped;
 

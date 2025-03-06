@@ -2,6 +2,10 @@ package test.pw2.itsincom.web;
 
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
+import io.quarkus.security.credential.Credential;
+import test.pw2.itsincom.service.UtentiManager;
+import test.pw2.itsincom.web.validation.CredentialValidationErrors;
+import test.pw2.itsincom.web.validation.CredentialValidator;
 import jakarta.ws.rs.FormParam;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -15,10 +19,12 @@ public class RegistrazioneResource {
 
     private final Template registrazione;
     private final UtentiManager utentiManager;
+    private final CredentialValidator credentialValidator;
 
-    public RegistrazioneResource(Template registrazione, UtentiManager utentiManager) {
+    public RegistrazioneResource(Template registrazione, UtentiManager utentiManager, CredentialValidator credentialValidator) {
         this.registrazione = registrazione;
         this.utentiManager = utentiManager;
+        this.credentialValidator = credentialValidator;
     }
 
     @GET
@@ -33,12 +39,15 @@ public class RegistrazioneResource {
         // 1. Validazione input
 
         String messaggioErrore = null;
-        if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
-            // Scritta di errore
-            // Status code 400
-            messaggioErrore = "Username o password non validi";
-        } else if (password.length() < 8) {
-            messaggioErrore = "Password troppo corta";
+        CredentialValidationErrors usernameError = credentialValidator.validateUsername(username);
+
+        if (usernameError != null) {
+            messaggioErrore = "Username non valido, motivo: " + usernameError.name();
+        }
+
+        CredentialValidationErrors passwordError = credentialValidator.validatePassword(password);
+        if (passwordError != null) {
+            messaggioErrore = "Password non valida, motivo: " + passwordError.name();
         }
 
         if (messaggioErrore != null) {
